@@ -1,0 +1,435 @@
+
+.kalos-intro {
+  --kalos-red: #e83e4b;
+  --kalos-blue: #2785bc;
+  --kalos-ink: #202b39;
+  --kalos-white: #f8fafc;
+
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  padding: clamp(20px, 4vw, 54px);
+  color: var(--kalos-white);
+  background:
+    radial-gradient(ellipse at 50% 43%, #263e59 0%, #111c2b 48%, #090f19 100%);
+  font-family: "Space Grotesk", sans-serif;
+  isolation: isolate;
+  animation: kalos-screen-in 0.7s ease both;
+}
+
+.kalos-intro * {
+  box-sizing: border-box;
+}
+
+.kalos-intro-noise {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.12;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0,
+    transparent 3px,
+    #ffffff12 4px
+  );
+}
+
+.kalos-intro-lines {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.15;
+  pointer-events: none;
+  background-image:
+    linear-gradient(#7bb9e01c 1px, transparent 1px),
+    linear-gradient(90deg, #7bb9e01c 1px, transparent 1px);
+  background-size: 54px 54px;
+  mask-image: radial-gradient(ellipse at center, black, transparent 75%);
+}
+
+.intro-header,
+.intro-bottom-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.intro-header {
+  position: relative;
+  z-index: 2;
+  color: #b7c8d9;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.intro-game-mark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.intro-mark-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--kalos-red);
+  box-shadow: 0 0 14px #e83e4b;
+  animation: kalos-blink 1.3s ease-in-out infinite;
+}
+
+.intro-version {
+  color: #7893ac;
+}
+
+.intro-center {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  text-align: center;
+  isolation: isolate;
+}
+
+.intro-flash {
+  position: absolute;
+  z-index: -1;
+  width: min(60vw, 520px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, #e83e4b42 0%, #2785bc1c 35%, transparent 70%);
+  opacity: 0;
+  transform: scale(0.35);
+}
+
+.intro-phase-1 .intro-flash {
+  animation: kalos-flash 1.1s ease-out forwards;
+}
+
+.intro-orbit {
+  position: absolute;
+  top: 34%;
+  left: 50%;
+  width: min(56vw, 400px);
+  aspect-ratio: 1;
+  border: 1px solid #82c7f039;
+  border-radius: 50%;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.6);
+}
+
+.intro-orbit-one {
+  border-top-color: #f46c78;
+  border-bottom-color: #f46c7840;
+}
+
+.intro-orbit-two {
+  width: min(44vw, 315px);
+  border-style: dashed;
+  border-color: #a4d7f544;
+}
+
+.intro-orbit-three {
+  width: min(32vw, 230px);
+  border-color: #ffffff3b;
+}
+
+.intro-phase-1 .intro-orbit-one {
+  animation: kalos-orbit-in 1.2s ease-out forwards,
+    kalos-rotate 18s linear 1.2s infinite;
+}
+
+.intro-phase-2 .intro-orbit-two {
+  animation: kalos-orbit-in 0.8s ease-out forwards,
+    kalos-rotate 24s linear 0.8s infinite reverse;
+}
+
+.intro-phase-3 .intro-orbit-three {
+  animation: kalos-orbit-in 0.7s ease-out forwards,
+    kalos-rotate 30s linear 0.7s infinite;
+}
+
+.intro-crest {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: clamp(100px, 17vw, 150px);
+  aspect-ratio: 1;
+  margin-bottom: 34px;
+  border: 1px solid #d5e8f45c;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #ffffff14, #ffffff03);
+  box-shadow:
+    0 0 0 10px #ffffff05,
+    0 0 45px #2785bc20,
+    inset 0 0 28px #ffffff0c;
+  opacity: 0;
+  transform: scale(0.5) rotate(-20deg);
+}
+
+.intro-crest::before,
+.intro-crest::after {
+  content: "";
+  position: absolute;
+  inset: -12px;
+  border: 1px solid #e83e4b5c;
+  border-radius: 50%;
+}
+
+.intro-crest::after {
+  inset: -21px;
+  border-color: #2785bc47;
+  border-style: dashed;
+}
+
+.intro-phase-1 .intro-crest {
+  animation: kalos-crest-in 0.9s cubic-bezier(.2, .8, .2, 1) forwards;
+}
+
+.crest-inner {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #fff;
+  font-size: clamp(32px, 5vw, 47px);
+  font-weight: 700;
+  letter-spacing: -5px;
+  text-shadow: 0 0 25px #d8efff40;
+}
+
+.crest-letter {
+  color: #f6f9ff;
+}
+
+.crest-y {
+  color: #ff727e;
+}
+
+.crest-slash {
+  width: 2px;
+  height: 43px;
+  margin: 0 3px;
+  background: #9ec9e9;
+  transform: rotate(25deg);
+}
+
+.intro-title {
+  position: relative;
+  z-index: 2;
+  width: min(100%, 600px);
+  opacity: 0;
+  transform: translateY(18px);
+}
+
+.intro-phase-2 .intro-title,
+.intro-phase-3 .intro-title {
+  animation: kalos-copy-in 0.8s ease forwards;
+}
+
+.intro-eyebrow {
+  color: #a6cde9;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 3px;
+}
+
+.intro-title h1 {
+  margin: 12px 0;
+  color: #fff;
+  font-size: clamp(40px, 8vw, 76px);
+  font-weight: 700;
+  letter-spacing: clamp(2px, 1vw, 9px);
+  line-height: 1;
+  text-shadow: 0 5px 35px #0005;
+}
+
+.intro-title h1 span {
+  color: #f16b78;
+}
+
+.intro-title p {
+  margin: 16px 0 0;
+  color: #b4c4d6;
+  font-size: clamp(12px, 2vw, 14px);
+  letter-spacing: 0.3px;
+}
+
+.intro-footer {
+  position: relative;
+  z-index: 2;
+  width: min(100%, 560px);
+  margin: 0 auto;
+}
+
+.intro-loading-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  color: #9bb2c8;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+}
+
+.intro-loading-label strong {
+  color: #fff;
+}
+
+.intro-progress {
+  height: 4px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #ffffff18;
+}
+
+.intro-progress span {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--kalos-blue), #9bd8f7, var(--kalos-red));
+  box-shadow: 0 0 15px #6ab9e5a0;
+}
+
+.intro-phase-1 .intro-progress span {
+  width: 38%;
+  transition: width 0.8s ease;
+}
+
+.intro-phase-2 .intro-progress span {
+  width: 72%;
+  transition: width 0.8s ease;
+}
+
+.intro-phase-3 .intro-progress span {
+  width: 100%;
+  transition: width 0.7s ease;
+}
+
+.intro-bottom-row {
+  margin-top: 17px;
+  color: #708da8;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+}
+
+.intro-skip {
+  position: absolute;
+  right: clamp(20px, 4vw, 54px);
+  bottom: clamp(76px, 11vh, 105px);
+  z-index: 3;
+  padding: 9px 12px;
+  border: 1px solid #ffffff2b;
+  border-radius: 4px;
+  color: #d5e5f2;
+  background: #ffffff08;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.intro-skip:hover {
+  border-color: #f16b78;
+  background: #e83e4b20;
+}
+
+.intro-skip span {
+  margin-left: 8px;
+  color: #f16b78;
+  font-size: 16px;
+}
+
+@keyframes kalos-screen-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes kalos-blink {
+  50% { opacity: 0.35; }
+}
+
+@keyframes kalos-flash {
+  0% { opacity: 0; transform: scale(0.35); }
+  35% { opacity: 1; }
+  100% { opacity: 0.65; transform: scale(1.25); }
+}
+
+@keyframes kalos-orbit-in {
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes kalos-rotate {
+  from { rotate: 0deg; }
+  to { rotate: 360deg; }
+}
+
+@keyframes kalos-crest-in {
+  0% { opacity: 0; transform: scale(0.5) rotate(-20deg); }
+  70% { opacity: 1; transform: scale(1.08) rotate(4deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+
+@keyframes kalos-copy-in {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 600px) {
+  .kalos-intro {
+    padding: 22px 18px;
+  }
+
+  .intro-header {
+    font-size: 8px;
+    letter-spacing: 1px;
+  }
+
+  .intro-orbit {
+    top: 32%;
+    width: 75vw;
+  }
+
+  .intro-orbit-two {
+    width: 59vw;
+  }
+
+  .intro-orbit-three {
+    width: 43vw;
+  }
+
+  .intro-crest {
+    margin-bottom: 30px;
+  }
+
+  .intro-bottom-row {
+    flex-wrap: wrap;
+    font-size: 7px;
+  }
+
+  .intro-skip {
+    right: 18px;
+    bottom: 92px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kalos-intro *,
+  .kalos-intro *::before,
+  .kalos-intro *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
