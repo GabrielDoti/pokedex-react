@@ -1,104 +1,125 @@
-
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./BootSequence.css";
+
+const LOGS = [
+  "NUCLEO DO SISTEMA ..... OK",
+  "SINCRONIZANDO DADOS ... OK",
+  "1025 ESPECIES LIDAS ... OK",
+  "BEM-VINDO, TREINADOR!",
+];
+
+const SUBTITLES = [
+  "AGUARDANDO ENERGIA...",
+  "LIGANDO APARELHO...",
+  "SINCRONIZANDO PESQUISA...",
+  "CARREGANDO REGISTROS...",
+  "SISTEMA PRONTO.",
+];
+
+const PROGRESS = [0, 25, 55, 85, 100];
 
 export default function BootSequence({ onComplete }) {
   const [phase, setPhase] = useState(0);
+  const [leaving, setLeaving] = useState(false);
   const [finished, setFinished] = useState(false);
+
+  // Guarda o callback num ref pra os timers não reiniciarem se o pai re-renderizar.
+  const onCompleteRef = useRef(onComplete);
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   useEffect(() => {
     const timers = [
-      window.setTimeout(() => setPhase(1), 400),
-      window.setTimeout(() => setPhase(2), 1400),
+      window.setTimeout(() => setPhase(1), 500),
+      window.setTimeout(() => setPhase(2), 1500),
       window.setTimeout(() => setPhase(3), 2600),
+      window.setTimeout(() => setPhase(4), 3600),
+      window.setTimeout(() => setLeaving(true), 4400),
       window.setTimeout(() => {
         setFinished(true);
-        onComplete?.();
-      }, 4400),
+        onCompleteRef.current?.();
+      }, 5200),
     ];
 
     return () => timers.forEach(window.clearTimeout);
-  }, [onComplete]);
+  }, []);
 
   function skipIntro() {
     setFinished(true);
-    onComplete?.();
+    onCompleteRef.current?.();
   }
 
   if (finished) return null;
 
   return (
-    <main className={`kalos-intro intro-phase-${phase}`}>
-      <div className="kalos-intro-noise" aria-hidden="true" />
-      <div className="kalos-intro-lines" aria-hidden="true" />
+    <main
+      className={`kalos-intro bt-phase-${phase} ${leaving ? "is-leaving" : ""}`}
+    >
+      <div className="bt-grid" aria-hidden="true" />
 
-      <header className="intro-header">
-        <span className="intro-game-mark">
-          <span className="intro-mark-dot" />
-          KALOS POKÉDEX SYSTEM
-        </span>
-        <span className="intro-version">MODEL XY-01</span>
-      </header>
-
-      <section className="intro-center">
-        <div className="intro-flash" aria-hidden="true" />
-
-        <div className="intro-orbit intro-orbit-one" aria-hidden="true" />
-        <div className="intro-orbit intro-orbit-two" aria-hidden="true" />
-        <div className="intro-orbit intro-orbit-three" aria-hidden="true" />
-
-        <div className="intro-crest" aria-hidden="true">
-          <div className="crest-inner">
-            <span className="crest-letter">X</span>
-            <span className="crest-slash" />
-            <span className="crest-letter crest-y">Y</span>
-          </div>
-        </div>
-
-        <div className="intro-title">
-          <span className="intro-eyebrow">
-            {phase < 2 ? "INICIANDO SISTEMA" : "BANCO DE DADOS CONECTADO"}
-          </span>
-
-          <h1>
-            POKÉ<span>DEX</span>
-          </h1>
-
-          <p>
-            {phase < 1
-              ? "Preparando interface de Kalos..."
-              : phase < 2
-                ? "Sincronizando dados de pesquisa..."
-                : phase < 3
-                  ? "Carregando registros Pokémon..."
-                  : "Sistema pronto. Bem-vindo à região de Kalos."}
-          </p>
-        </div>
-      </section>
-
-      <footer className="intro-footer">
-        <div className="intro-loading">
-          <div className="intro-loading-label">
-            <span>INITIALIZING KALOS DATABASE</span>
-            <strong>{phase === 0 ? "12%" : phase === 1 ? "38%" : phase === 2 ? "72%" : "100%"}</strong>
-          </div>
-          <div className="intro-progress">
+      <div className={`bt-device ${leaving ? "is-zooming" : ""}`}>
+        <div className="bt-top">
+          <div className={`bt-lens ${phase >= 1 ? "is-lit" : ""}`}>
             <span />
           </div>
+
+          <div className="bt-leds" aria-hidden="true">
+            <i className={`led-red ${phase >= 1 ? "on" : ""}`} />
+            <i className={`led-yellow ${phase >= 2 ? "on" : ""}`} />
+            <i className={`led-green ${phase >= 3 ? "on" : ""}`} />
+          </div>
+
+          <span className="bt-model">MODEL XY-01</span>
         </div>
 
-        <div className="intro-bottom-row">
-          <span>POKÉMON RESEARCH LAB</span>
-          <span>REGION: KALOS</span>
-          <span>VERSION 1.0</span>
-        </div>
-      </footer>
+        <div className="bt-bezel">
+          <div className="bt-screen">
+            <div className="bt-screen-off" aria-hidden="true" />
 
-      <button
-        type="button"
-        className="intro-skip"
-        onClick={skipIntro}
-      >
+            <div className="bt-screen-head">
+              <span>POKEDEX OS</span>
+              <span>v1.0</span>
+            </div>
+
+            <h1>
+              POKÉ<span>DEX</span>
+            </h1>
+            <p className="bt-sub">{SUBTITLES[phase]}</p>
+
+            <ul className="bt-log">
+              {LOGS.map((line, index) => (
+                <li key={line} className={phase > index ? "show" : ""}>
+                  &gt; {line}
+                </li>
+              ))}
+            </ul>
+
+            <div className="bt-progress">
+              <span style={{ width: `${PROGRESS[phase]}%` }} />
+            </div>
+            <div className="bt-pct">
+              <span>KALOS DATABASE</span>
+              <strong>{PROGRESS[phase]}%</strong>
+            </div>
+          </div>
+        </div>
+
+        <div className="bt-bottom" aria-hidden="true">
+          <span className="bt-dpad" />
+          <span className="bt-speaker">
+            <i />
+            <i />
+            <i />
+          </span>
+          <span className="bt-ab">
+            <i />
+            <i />
+          </span>
+        </div>
+      </div>
+
+      <button type="button" className="intro-skip" onClick={skipIntro}>
         PULAR INTRODUÇÃO <span aria-hidden="true">›</span>
       </button>
     </main>

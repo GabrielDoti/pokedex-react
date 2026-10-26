@@ -4,18 +4,19 @@ import BootSequence from "./components/BootSequence";
 import { PokemonList } from "./components/PokemonList";
 import { PokemonDetails } from "./components/PokemonDetails";
 import "./index.css";
-
+import "./PokedexShell.css"; // precisa vir depois do index.css
 
 const pokemonData = data.pokemon ?? [];
-const trainers = [
-  "Ash", "Brock", "Misty", "Lt. Surge",
-  "Erika", "Koga", "Sabrina", "Blaine",
-  "Giovanni", "Gary", "Team Rocket", "Lance",
-];
+const trainers = data.trainers ?? [];
+const pokemonById = new Map(pokemonData.map((p) => [p.id, p]));
 
+const getSprite = (id) =>
+  `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
 
-
-
+// Botões físicos da carcaça conversam com o carrossel por eventos.
+const sendNav = (direction) =>
+  window.dispatchEvent(new CustomEvent("dex:nav", { detail: direction }));
+const sendOpen = () => window.dispatchEvent(new CustomEvent("dex:open"));
 
 export default function App() {
   const [systemStarted, setSystemStarted] = useState(false);
@@ -23,7 +24,6 @@ export default function App() {
   const [selectedType, setSelectedType] = useState("Todos");
   const [selectedPokemon, setSelectedPokemon] = useState(null);
   const [section, setSection] = useState("pokemon");
-
 
   const types = useMemo(() => {
     return [
@@ -35,6 +35,8 @@ export default function App() {
     ].sort();
   }, []);
 
+  const typeOptions = useMemo(() => ["Todos", ...types], [types]);
+
   const filteredPokemon = useMemo(() => {
     const term = search.trim().toLowerCase();
 
@@ -45,162 +47,230 @@ export default function App() {
 
       const matchesType =
         selectedType === "Todos" ||
-        pokemon.types?.some(
-          (type) => type.name === selectedType
-        );
+        pokemon.types?.some((type) => type.name === selectedType);
 
       return matchesSearch && matchesType;
     });
   }, [search, selectedType]);
 
+  if (!systemStarted) {
+    return <BootSequence onComplete={() => setSystemStarted(true)} />;
+  }
 
-    if (!systemStarted) {
+  // D-pad ↑ ↓ troca o filtro de tipo.
+  const cycleType = (direction) => {
+    const current = typeOptions.indexOf(selectedType);
+    const next =
+      (current + direction + typeOptions.length) % typeOptions.length;
+    setSelectedType(typeOptions[next]);
+  };
+
   return (
-    <BootSequence
-      onComplete={() => setSystemStarted(true)}
-    />
-  );
-}
+    <main className="dex-page">
+      <div className="dex-device">
+        <header className="dex-top">
+          <div className="dex-lens" aria-hidden="true" />
 
+          <div className="dex-leds" aria-hidden="true">
+            <i className="led-red" />
+            <i className="led-yellow" />
+            <i className="led-green" />
+          </div>
 
-  return (
-    <main className="app-shell">
-      <header className="topbar">
-        <a
-          href="#inicio"
-          className="brand"
-          onClick={() => setSection("pokemon")}
-        >
-          <span className="brand-ball">◉</span>
-          Poké<span>Dex</span>
-        </a>
+          <span className="dex-brand">
+            Poké<span>Dex</span>
+          </span>
 
-        <nav>
-          <button
-            className={section === "pokemon" ? "nav-active" : ""}
-            onClick={() => setSection("pokemon")}
-          >
-            Pokémon
-          </button>
-          <button
-            className={section === "trainers" ? "nav-active" : ""}
-            onClick={() => setSection("trainers")}
-          >
-            Treinadores
-          </button>
-        </nav>
-      </header>
+          <nav className="dex-nav">
+            <button
+              className={section === "pokemon" ? "nav-active" : ""}
+              onClick={() => setSection("pokemon")}
+            >
+              Pokémon
+            </button>
+            <button
+              className={section === "trainers" ? "nav-active" : ""}
+              onClick={() => setSection("trainers")}
+            >
+              Treinadores
+            </button>
+          </nav>
+        </header>
 
-      <section className="hero" id="inicio">
-        <div className="hero-copy">
-          <span className="eyebrow">EXPLORE O MUNDO POKÉMON</span>
-          <h1>Encontre seu próximo <span>Pokémon.</span></h1>
-          <p>
-            Explore espécies, descubra atributos e monte
-            sua equipe favorita.
-          </p>
-          <div className="hero-count">
-            <strong>{pokemonData.length}</strong>
-            <span>Pokémon no catálogo</span>
+        <div className="dex-hinge" aria-hidden="true" />
+
+        <div className="dex-bezel">
+          <div className="dex-screen">
+            <div className="dex-screen-bar">
+              <span className="dex-screen-title">
+                <i /> KALOS POKEDEX
+              </span>
+              <span>
+                {section === "pokemon"
+                  ? `${filteredPokemon.length} ENCONTRADOS`
+                  : `${trainers.length} TREINADORES`}
+              </span>
+            </div>
+
+            {section === "pokemon" ? (
+              <>
+                <div className="toolbar">
+                  <label className="search-box">
+                    <span aria-hidden="true">⌕</span>
+                    <input
+                      type="search"
+                      placeholder="Buscar por nome ou número..."
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                    />
+                  </label>
+
+                  <label className="filter-box">
+                    <span>Tipo</span>
+                    <select
+                      value={selectedType}
+                      onChange={(event) => setSelectedType(event.target.value)}
+                    >
+                      <option value="Todos">Todos os tipos</option>
+                      {types.map((type) => (
+                        <option key={type} value={type}>
+                          {type}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
+                <PokemonList
+                  pokemon={filteredPokemon}
+                  onSelect={setSelectedPokemon}
+                />
+              </>
+            ) : (
+              <div className="dex-trainers">
+                {trainers.map((trainer, index) => {
+                  const slots = Math.max(8, trainer.badges ?? 0);
+
+                  return (
+                    <article className="dex-trainer" key={trainer.id}>
+                      <div className="dex-trainer-head">
+                        <div className="dex-trainer-avatar">
+                          {trainer.name === "Team Rocket" ? "🚀" : "🧢"}
+                        </div>
+                        <div>
+                          <span className="dex-trainer-number">
+                            TREINADOR #{String(index + 1).padStart(2, "0")}
+                          </span>
+                          <h3>{trainer.name}</h3>
+                        </div>
+                      </div>
+
+                      <div
+                        className="dex-badges"
+                        title={`${trainer.badges} insígnias`}
+                      >
+                        {Array.from({ length: slots }, (_, i) => (
+                          <i
+                            key={i}
+                            className={i < (trainer.badges ?? 0) ? "on" : ""}
+                          />
+                        ))}
+                      </div>
+
+                      <div className="dex-team">
+                        {(trainer.pokemonIds ?? []).map((id, i) => {
+                          const member = pokemonById.get(id);
+                          if (!member) return null;
+
+                          return (
+                            <button
+                              key={`${id}-${i}`}
+                              type="button"
+                              title={member.name}
+                              aria-label={`Ver detalhes de ${member.name}`}
+                              onClick={() => setSelectedPokemon(member)}
+                            >
+                              <img src={getSprite(id)} alt="" loading="lazy" />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="hero-art" aria-hidden="true">
-          <div className="hero-orbit orbit-one" />
-          <div className="hero-orbit orbit-two" />
-          <img
-            src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png"
-            alt=""
-          />
-          <span className="spark spark-one">✦</span>
-          <span className="spark spark-two">✧</span>
+        <div className="dex-bottom">
+          <div className="dex-dpad">
+            <button
+              type="button"
+              className="dpad-up"
+              aria-label="Tipo anterior"
+              onClick={() => cycleType(-1)}
+            >
+              ▲
+            </button>
+            <button
+              type="button"
+              className="dpad-left"
+              aria-label="Pokémon anterior"
+              onClick={() => sendNav("prev")}
+            >
+              ◀
+            </button>
+            <div className="dpad-center" aria-hidden="true" />
+            <button
+              type="button"
+              className="dpad-right"
+              aria-label="Próximo Pokémon"
+              onClick={() => sendNav("next")}
+            >
+              ▶
+            </button>
+            <button
+              type="button"
+              className="dpad-down"
+              aria-label="Próximo tipo"
+              onClick={() => cycleType(1)}
+            >
+              ▼
+            </button>
+          </div>
+
+          <div className="dex-speaker" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+            <i />
+          </div>
+
+          <div className="dex-ab">
+            <button
+              type="button"
+              className="btn-b"
+              aria-label="Fechar ficha"
+              onClick={() => setSelectedPokemon(null)}
+            >
+              B
+            </button>
+            <button
+              type="button"
+              className="btn-a"
+              aria-label="Abrir ficha"
+              onClick={sendOpen}
+            >
+              A
+            </button>
+          </div>
         </div>
-      </section>
+      </div>
 
-      {section === "pokemon" ? (
-        <section className="catalog">
-          <div className="section-heading">
-            <div>
-              <span className="eyebrow">SEU GUIA POKÉMON</span>
-              <h2>Pokédex</h2>
-              <p>Pesquise e descubra novas criaturas.</p>
-            </div>
-            <span className="result-count">
-              {filteredPokemon.length} encontrados
-            </span>
-          </div>
-
-          <div className="toolbar">
-            <label className="search-box">
-              <span aria-hidden="true">⌕</span>
-              <input
-                type="search"
-                placeholder="Buscar por nome ou número..."
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-              />
-            </label>
-
-            <label className="filter-box">
-              <span>Tipo</span>
-              <select
-                value={selectedType}
-                onChange={(event) =>
-                  setSelectedType(event.target.value)
-                }
-              >
-                <option value="Todos">Todos os tipos</option>
-                {types.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          <PokemonList
-            pokemon={filteredPokemon}
-            onSelect={setSelectedPokemon}
-          />
-        </section>
-      ) : (
-        <section className="catalog">
-          <div className="section-heading">
-            <div>
-              <span className="eyebrow">LÍDERES E AVENTUREIROS</span>
-              <h2>Treinadores</h2>
-              <p>Conheça os treinadores do universo Pokémon.</p>
-            </div>
-          </div>
-
-          <div className="trainer-grid">
-            {trainers.map((trainer, index) => (
-              <article className="trainer-card" key={trainer}>
-                <div className="trainer-avatar">
-                  {trainer === "Team Rocket" ? "🚀" : "🧢"}
-                </div>
-                <div>
-                  <span className="trainer-number">
-                    TREINADOR #{String(index + 1).padStart(2, "0")}
-                  </span>
-                  <h3>{trainer}</h3>
-                </div>
-              </article>
-            ))}
-          </div>
-          <p className="trainer-note">
-            Esta seção apresenta os nomes dos treinadores.
-            Para exibir insígnias e equipes, conecte os dados
-            correspondentes do arquivo JSON, caso disponíveis.
-          </p>
-        </section>
-      )}
-
-      <footer>
-        <span>◉ PokéDex</span>
-        <p>Projeto acadêmico desenvolvido com React + Vite.</p>
-      </footer>
+      <p className="dex-foot">
+        ◉ PokéDex · Projeto acadêmico desenvolvido com React + Vite.
+      </p>
 
       <PokemonDetails
         pokemon={selectedPokemon}
